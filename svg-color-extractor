@@ -1,4 +1,11 @@
 #!/usr/bin/env perl 
+# Print a sorted list of the colors from one or more SVG files
+# Files must be uncompressed svg format files
+# Use the -g option to create output suitable to pipe into a file
+# and load into GIMP or Inkscape as a gpl GIMP palette file.
+# Colors are sorted by how often they appear in all processed images with
+# most popular colors first (making it easy to discard colors that are
+# rarely used).
 use strict;
 use warnings;
 use utf8;
@@ -37,9 +44,10 @@ if ($opts{'g'} == 1) {
 	print join("\n", map($_.':'.$colorpopularity{$_}, sort {$colorpopularity{$b}<=>$colorpopularity{$a}} keys %colorpopularity));
 }
 
+# Borrowed from Color::Rgb
 # hex2rgb(): takes a hex string, and returns an rgb list or string
 # depending if $delim was given or not
-# Usage: CLASS->hex2rgb('#000000' [,',']);
+# Usage: hex2rgb('#000000' [,',']);
 # RETURN VALUE: list or string
 sub hex2rgb {
     use Carp 'croak';
