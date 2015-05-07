@@ -1,0 +1,66 @@
+#!/usr/bin/env perl 
+use strict;
+use warnings;
+use utf8;
+use Getopt::Std;
+
+my @colors;
+
+my %opts;
+getopts('g', \%opts);
+my @files = @ARGV;
+
+foreach my $file(@files) {
+	open my $handle, '<:utf8', $file or die "Error reading file contents of $file\n";
+
+	while (<$handle>) {
+		push(@colors, /(#[a-fA-F0-9]{6}|#[a-fA-F0-9]{3})/i);
+	}
+}
+
+my %colorpopularity;
+map ($colorpopularity{$_}++, @colors);
+
+if ($opts{'g'} == 1) {
+    print "GIMP Palette\n";
+    print "Name: Auto-generated pallette\n";
+    my @sorted = map($_, sort {$colorpopularity{$b}<=>$colorpopularity{$a}} keys %colorpopularity);
+    for my $color (@sorted) {
+        my @tuple = hex2rgb($color);
+	format STDOUT =
+@<< @<< @<<
+        @tuple
+.
+        write;
+    }
+} else {
+	print join("\n", map($_.':'.$colorpopularity{$_}, sort {$colorpopularity{$b}<=>$colorpopularity{$a}} keys %colorpopularity));
+}
+
+# hex2rgb(): takes a hex string, and returns an rgb list or string
+# depending if $delim was given or not
+# Usage: CLASS->hex2rgb('#000000' [,',']);
+# RETURN VALUE: list or string
+sub hex2rgb {
+    use Carp 'croak';
+    my ($hex, $delim) = @_;
+
+    unless ( $hex ) {
+        croak "hex2rgb(): Usage: hex2rgb(\$hex [,\$delim]";
+    }
+
+    $hex =~ s/^(\#|Ox)//;
+
+    $_ = $hex;
+    my ($r, $g, $b) = m/(\w{2})(\w{2})(\w{2})/;
+
+    my @rgb = ();
+    $rgb[0] = CORE::hex($r);
+    $rgb[1] = CORE::hex($g);
+    $rgb[2] = CORE::hex($b);
+
+    defined $delim and return join ($delim, @rgb);
+
+    return @rgb;
+}
+
